@@ -1,5 +1,7 @@
 package com.example.addcontacts.presentation.screens.components
 
+import android.content.Context
+import android.widget.Toast
 import com.example.addcontacts.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,9 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.example.addcontacts.presentation.viewmodel.AddContactsViewModel
 
 @Composable
-fun TopAppBar(contactsCount:String){
+fun TopAppBar(contactsCount:String,context: Context,viewModel: AddContactsViewModel){
     val searchedItem = remember {
         mutableStateOf("")
     }
@@ -75,6 +78,9 @@ fun TopAppBar(contactsCount:String){
                     IconButton(
                         onClick = {
                             //refresh contacts function here
+                            viewModel.loadContacts(context)
+                            Toast.makeText(context,"Contacts updated",Toast.LENGTH_SHORT).show()
+
 
                         }
                     ) {

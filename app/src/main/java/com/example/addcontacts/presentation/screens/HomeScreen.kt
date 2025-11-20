@@ -24,30 +24,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.hilt.getViewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.example.addcontacts.presentation.screens.components.ContactCard
 import com.example.addcontacts.presentation.screens.components.TabNavigator
 import com.example.addcontacts.presentation.screens.components.TopAppBar
 import com.example.addcontacts.presentation.viewmodel.AddContactsViewModel
 import com.example.addcontacts.R
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 
 class HomeScreen: Screen{
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.current
-        val viewmodel: AddContactsViewModel = viewModel()
+        val viewmodel: AddContactsViewModel = hiltViewModel()
         val context = LocalContext.current
 
-        val contacts = viewmodel.contacts.collectAsState()
+       // val contacts = viewmodel.contacts.collectAsState()
+        val contacts = viewmodel.db_contacts.collectAsState(initial = emptyList())
 
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted ->
             if (isGranted){
-                viewmodel.onPermissionGranted()
+                viewmodel.onPermissionGranted(context)
                 viewmodel.loadContacts(context)
                 Toast.makeText(context,"Read contacts permission granted.",Toast.LENGTH_SHORT).show()
             }else{
@@ -56,13 +60,13 @@ class HomeScreen: Screen{
             }
 
         }
-        LaunchedEffect(Unit) {
-            if (!viewmodel.checkReadContactsPermission(context)) {
-                permissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)
-            } else {
-                viewmodel.loadContacts(context)
-            }
-        }
+//        LaunchedEffect(Unit) {
+//            if (!viewmodel.checkReadContactsPermission(context)) {
+//                permissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)
+//            } else {
+//                viewmodel.loadContacts(context)
+//            }
+//        }
 
 
 
@@ -71,7 +75,7 @@ class HomeScreen: Screen{
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            TopAppBar(contacts.value.size.toString())
+            TopAppBar(contacts.value.size.toString(),context,viewmodel)
             Column(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
@@ -86,31 +90,50 @@ class HomeScreen: Screen{
 
                 Spacer(Modifier.height(15.dp))
                 //display all the phones conctacts
-                if (contacts.value.isNotEmpty()){
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(viewmodel.contacts.value){item ->
-                            ContactCard(item.name,item.telNo)
-                            Spacer(Modifier.height(5.dp))
-
+                when {
+                    //  DB is empty + no permission → show sync button
+                    contacts.value.isEmpty() && !viewmodel.checkReadContactsPermission(context) -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Button(
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(R.color.mainTheme)
+                                ),
+                                onClick = {
+                                    permissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)
+                                }
+                            ) {
+                                Text("SYNC_PHONE_CONTACTS", color = Color.White)
+                            }
                         }
                     }
-                }else{
-                    Box(modifier = Modifier
-                        .fillMaxSize(),
-                        contentAlignment = Alignment.Center){
-                        Button(
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(R.color.mainTheme)
-                            ),
-                            onClick = {permissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)}
+
+                    //DB empty + permission granted → show loading instead of flashing button
+                    contacts.value.isEmpty() && viewmodel.checkReadContactsPermission(context) -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text("LOAD_PHONE_CONTACTS", color = Color.White)
+                            androidx.compose.material3.CircularProgressIndicator(color = colorResource(R.color.mainTheme))
+                        }
+                    }
+
+                    // 3️⃣ DB has contacts → show list
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(contacts.value) { item ->
+                                ContactCard(item.names, item.number)
+                                Spacer(Modifier.height(5.dp))
+                            }
                         }
                     }
                 }
+
 
 
             }
@@ -119,4 +142,11 @@ class HomeScreen: Screen{
 
     }
 }
+
+//Steps that i wanna follow
+//launch app
+//tries to display contacts from the db
+//if the contacts from db are zero we show a button for the sync contacts
+//when we click sync contacts we request for permission to read contacts
+//id permission granted then we load the contacts
 

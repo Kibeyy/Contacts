@@ -1,5 +1,6 @@
 package com.example.addcontacts.presentation.viewmodel
 
+import android.Manifest
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
@@ -8,12 +9,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.addcontacts.data.local.entity.PhoneContactEntity
 import com.example.addcontacts.domain.PhoneContact
+import com.example.addcontacts.domain.repository.PhoneContactsRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 enum class SelectedTab {
     ALL,
@@ -23,24 +29,22 @@ sealed class ScreenStates(
 
 )
 
-class AddContactsViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class AddContactsViewModel @Inject constructor(private val repo: PhoneContactsRepository) :
+    ViewModel() {
 
     private val _contacts = MutableStateFlow<List<PhoneContact>>(emptyList())
     val contacts = _contacts.asStateFlow()
-    val context  = getApplication<Application>()
     val hasPermission = mutableStateOf(false)
-    init {
-        if (checkReadContactsPermission(context)){
-            hasPermission.value = true
-            loadContacts(context)
-            }
-    }
+
+    val db_contacts = repo.getAllContacts()
+
     fun checkReadContactsPermission(context: Context): Boolean {
-        val permission = android.Manifest.permission.READ_CONTACTS
+        val permission = Manifest.permission.READ_CONTACTS
         val permissionStatus = ContextCompat.checkSelfPermission(context, permission)
         return permissionStatus == PackageManager.PERMISSION_GRANTED
     }
-    fun onPermissionGranted(){
+    fun onPermissionGranted(context: Context){
         hasPermission.value = true
         loadContacts(context)
     }
@@ -49,6 +53,7 @@ class AddContactsViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch(Dispatchers.IO) {
 
             val tempContactsList = mutableListOf<PhoneContact>()
+            val tempContactsEntityList = mutableListOf<PhoneContactEntity>()
 
             // Query all phone contacts
             val cursor = context.contentResolver.query(
@@ -85,11 +90,21 @@ class AddContactsViewModel(application: Application) : AndroidViewModel(applicat
                             telNo = number
                         )
                     )
+                    tempContactsEntityList.add(
+                        PhoneContactEntity(
+                            number = number,
+                            names = name
+                        )
+                    )
                 }
             }
 
             // Update StateFlow
             _contacts.value = tempContactsList
+
+            if (tempContactsEntityList.isNotEmpty()){
+               repo.insertContacts(tempContactsEntityList)
+            }
         }
     }
 

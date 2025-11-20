@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // Apply the Hilt Android plugin
+    id("com.google.dagger.hilt.android")
+    // Apply the KSP plugin
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -65,5 +69,19 @@ dependencies {
     implementation(libs.voyager.tab.navigator)
     //viewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Hilt main library (used by application/activity classes)
+    implementation(libs.dagger.hilt.android)
+
+    // Hilt annotation processor (use KSP)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+
+    // For Hilt's ViewModel support
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    implementation(libs.voyager.navigator)
 
 }

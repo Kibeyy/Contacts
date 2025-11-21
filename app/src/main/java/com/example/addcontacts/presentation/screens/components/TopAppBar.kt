@@ -108,15 +108,18 @@ fun TopAppBar(contactsCount:String,context: Context,viewModel: AddContactsViewMo
        ) {
            OutlinedTextField(
                value = searchedItem.value,
-               onValueChange = {searchedItem.value = it},
+               onValueChange = {
+                   searchedItem.value = it
+                   viewModel.searchQuery.value = it
+                               },
                modifier = Modifier
                    .fillMaxWidth()
                ,
                colors = OutlinedTextFieldDefaults.colors(
                    unfocusedBorderColor = Color.White,
                    focusedBorderColor = Color.White,
-                   focusedTextColor = Color.Gray,
-                   unfocusedTextColor = Color.Gray,
+                   focusedTextColor = Color.Black,
+                   unfocusedTextColor = Color.Black,
                    cursorColor = colorResource(R.color.mainTheme),
                    focusedContainerColor =Color.White   ,
                    unfocusedContainerColor = Color.White,
@@ -134,7 +137,7 @@ fun TopAppBar(contactsCount:String,context: Context,viewModel: AddContactsViewMo
                keyboardActions = KeyboardActions(
                    //trigger search action from keyboard
                    onSearch = {
-                       searchedItem.value = ""
+                      // searchedItem.value = ""
                        keyboardController?.hide()
                    }
                )

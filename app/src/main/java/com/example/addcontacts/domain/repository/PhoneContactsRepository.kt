@@ -10,6 +10,10 @@ class PhoneContactsRepository @Inject constructor(private val dao: PhoneDao ){
         return dao.getAllContacts()
     }
 
+    fun getSearchedContact(query:String): Flow<List<PhoneContactEntity>>{
+        return dao.getSearchedContacts(query)
+    }
+
     suspend fun insertContact(contact: PhoneContactEntity){
         return dao.InsertContact(contact)
 
@@ -21,6 +25,10 @@ class PhoneContactsRepository @Inject constructor(private val dao: PhoneDao ){
 
     suspend fun deleteContact(contact: PhoneContactEntity){
         return dao.DeleteContact(contact)
+    }
+
+    suspend fun deleteAllContacts(){
+        return dao.DeleteAllContacts()
     }
 
     suspend fun updateContact(contact: PhoneContactEntity){

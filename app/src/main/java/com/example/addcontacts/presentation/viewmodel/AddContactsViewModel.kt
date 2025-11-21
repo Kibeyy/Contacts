@@ -16,8 +16,14 @@ import com.example.addcontacts.domain.PhoneContact
 import com.example.addcontacts.domain.repository.PhoneContactsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,6 +44,21 @@ class AddContactsViewModel @Inject constructor(private val repo: PhoneContactsRe
     val hasPermission = mutableStateOf(false)
 
     val db_contacts = repo.getAllContacts()
+
+    val searchQuery = MutableStateFlow("")
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    val searchResults = searchQuery
+        .debounce(300)
+        .flatMapLatest { query ->
+            if (query.isNotEmpty()){
+                repo.getSearchedContact(query)
+            }else{
+                repo.getAllContacts()
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(),emptyList())
+
 
     fun checkReadContactsPermission(context: Context): Boolean {
         val permission = Manifest.permission.READ_CONTACTS
@@ -103,7 +124,8 @@ class AddContactsViewModel @Inject constructor(private val repo: PhoneContactsRe
             _contacts.value = tempContactsList
 
             if (tempContactsEntityList.isNotEmpty()){
-               repo.insertContacts(tempContactsEntityList)
+                repo.deleteAllContacts()
+                repo.insertContacts(tempContactsEntityList)
             }
         }
     }

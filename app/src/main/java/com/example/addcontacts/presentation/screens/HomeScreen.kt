@@ -3,6 +3,7 @@ package com.example.addcontacts.presentation.screens
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -45,7 +46,8 @@ class HomeScreen: Screen{
         val context = LocalContext.current
 
        // val contacts = viewmodel.contacts.collectAsState()
-        val contacts = viewmodel.db_contacts.collectAsState(initial = emptyList())
+       // val contacts = viewmodel.db_contacts.collectAsState(initial = emptyList())
+        val contacts = viewmodel.searchResults.collectAsState()
 
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
@@ -113,11 +115,15 @@ class HomeScreen: Screen{
 
                     //DB empty + permission granted → show loading instead of flashing button
                     contacts.value.isEmpty() && viewmodel.checkReadContactsPermission(context) -> {
-                        Box(
+                        Column(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+
                             androidx.compose.material3.CircularProgressIndicator(color = colorResource(R.color.mainTheme))
+                            Spacer(Modifier.height(20.dp))
+                            Text("Syncing contacts...")
                         }
                     }
 

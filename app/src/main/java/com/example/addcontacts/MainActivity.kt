@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import cafe.adriel.voyager.navigator.Navigator
+import com.example.addcontacts.presentation.screens.AddContactScreen
 import com.example.addcontacts.presentation.screens.HomeScreen
 import com.example.addcontacts.ui.theme.AddContactsTheme
 import dagger.hilt.android.AndroidEntryPoint

@@ -77,7 +77,13 @@ class HomeScreen: Screen{
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            TopAppBar(contacts.value.size.toString(),context,viewmodel)
+            TopAppBar(
+                contacts.value.size.toString(),
+                context,
+                viewmodel,
+                onAddContactClicked = {
+                    navigator?.push(AddContactScreen())
+                })
             Column(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)

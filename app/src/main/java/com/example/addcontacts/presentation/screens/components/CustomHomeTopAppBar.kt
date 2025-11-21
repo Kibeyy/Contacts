@@ -34,13 +34,16 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.addcontacts.presentation.viewmodel.AddContactsViewModel
 
 @Composable
-fun TopAppBar(contactsCount:String,context: Context,viewModel: AddContactsViewModel){
+fun TopAppBar(contactsCount:String,
+              context: Context,
+              viewModel: AddContactsViewModel,
+              onAddContactClicked: () -> Unit
+              ){
     val searchedItem = remember {
         mutableStateOf("")
     }
@@ -97,7 +100,7 @@ fun TopAppBar(contactsCount:String,context: Context,viewModel: AddContactsViewMo
 
 
             }
-            AddContactsButton(onClick = {})
+            AddContactsButton(onClick = onAddContactClicked)
         }
         Spacer(Modifier.height(10.dp))
         //search bar from here
